@@ -1,0 +1,2048 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ONE MORE SCROLL</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#fff;font-family:Arial,sans-serif}
+img{user-select:none;-webkit-user-drag:none}
+button,input{font:inherit}
+button{cursor:pointer}
+.page{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:white}
+.page.on{display:flex}
+
+/* WELCOME */
+#welcome,#select{cursor:none}
+#logoBox{width:min(46vw,560px);transition:transform .12s}
+#logoBox img{width:100%}
+#startHint{position:absolute;bottom:34px;color:#bbb;font-size:12px;letter-spacing:7px}
+#cursorPhone{position:fixed;left:50%;top:50%;z-index:999;width:52px;height:86px;background:white;border:3px solid #111;border-radius:12px;transform:translate(-50%,-50%) rotate(-18deg);pointer-events:none}
+#cursorPhone:after{content:"♥";position:absolute;inset:0;display:grid;place-items:center;color:#ff5e8c;font-size:30px}
+#glow{position:fixed;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,#ff7ca744,transparent 70%);transform:translate(-50%,-50%);pointer-events:none;opacity:0;z-index:998}
+#select{flex-direction:column}
+#select h1{position:absolute;top:9%;font-size:clamp(28px,3vw,48px)}
+.people{display:flex;gap:min(12vw,140px)}
+.person{display:flex;flex-direction:column;align-items:center}
+.person img{width:min(28vw,270px);height:260px;object-fit:contain}
+.person b{font-size:24px;letter-spacing:4px}
+.person.scared img{animation:shake .12s infinite alternate}
+.person.fade{opacity:0;transition:.3s}
+@keyframes shake{to{transform:translateX(4px)}}
+.heart{position:fixed;pointer-events:none;z-index:1000}
+#namePage{flex-direction:column;gap:22px}
+#namePage h1{font-size:clamp(28px,3vw,44px)}
+#nameInput{width:min(420px,80vw);padding:16px;border:0;border-bottom:2px solid #111;text-align:center;font-size:24px;outline:none}
+#go{padding:14px 38px;border:2px solid #111;border-radius:30px;background:white}
+
+/* MAIN ROOM */
+#main{overflow:hidden;background:#f4f4f4;justify-content:flex-start;align-items:flex-start}
+#track{position:relative;flex:none;width:max-content;height:128vh;top:-12vh;will-change:transform}
+#bg{display:block;height:128vh;width:auto;max-width:none}
+#bedHotspot{position:absolute;left:5.4%;top:66.5%;width:8.2%;height:8.2%;z-index:25;cursor:pointer}
+#ringFx{position:absolute;left:6.2%;top:64%;width:36px;height:36px;z-index:26;pointer-events:none;display:none}
+.ringLine{position:absolute;inset:0;border:2px solid #ff5c87aa;border-radius:50%;animation:ringPulse 1s infinite}
+.ringLine:nth-child(2){animation-delay:.22s}
+.ringLine:nth-child(3){animation-delay:.44s}
+@keyframes ringPulse{0%{transform:scale(.4);opacity:.9}70%{transform:scale(1.25);opacity:0}100%{opacity:0}}
+#note{position:fixed;right:4.5%;top:15%;width:min(390px,34vw);padding:18px;background:white;border-radius:22px;display:flex;align-items:center;gap:15px;box-shadow:0 10px 30px #0002;opacity:0;transform:translateY(-12px);transition:.8s;pointer-events:none;z-index:50}
+#note.show{opacity:1;transform:translateY(0)}
+#noteIcon{width:52px;height:52px;flex:none;display:grid;place-items:center;border-radius:14px;background:#ff6b95;color:white;font-size:25px}
+#noteText small{display:block;color:#aaa;font-size:12px;letter-spacing:2px;margin-bottom:4px}
+#noteText div{font-size:16px;line-height:1.4;color:#222}
+.hint{position:absolute;display:none;font-size:11px;letter-spacing:6px;color:#ff4f7d73;cursor:pointer;z-index:35;animation:blink 1s infinite alternate}
+@keyframes blink{to{opacity:.2}}
+#phoneHint{left:6%;top:66.2%}
+#sofaHint{right:2.2%;top:60.8%}
+#sofaHotspot{position:absolute;right:1.6%;top:47.8%;width:18%;height:18%;z-index:31;display:none;cursor:pointer}
+#walker{position:absolute;left:-340px;bottom:13.7%;height:38.5%;width:auto;z-index:22;display:none;pointer-events:none}
+
+/* PHONE */
+#phonePanel{position:fixed;left:12%;top:7vh;width:290px;height:560px;z-index:100;opacity:0;visibility:hidden;pointer-events:none;transform-origin:top left;transform:translateX(-20px) scale(var(--phoneZoom,1.3));transition:opacity .5s,transform .5s,visibility .5s}
+#phonePanel.visible{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0) scale(var(--phoneZoom,1.3))}
+#phonePanel .phone{position:relative;width:100%;height:100%;border:9px solid #222;border-radius:35px;background:white;box-shadow:0 18px 50px #0004;overflow:hidden;transition:filter 2s ease}
+#home{position:absolute;inset:0;z-index:10;background:linear-gradient(150deg,#fff0f5,#f7d8e5);text-align:center;padding:55px 18px 20px}
+.clock{font-size:43px;font-weight:300;color:#333}
+#home p{margin-top:12px;color:#555;font-size:14px;letter-spacing:3px}
+.gridA{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:65px}
+#phonePanel .app{width:48px;height:48px;display:grid;place-items:center;background:white;border:0;border-radius:13px;font-size:27px;font-style:normal;box-shadow:0 3px 9px #0001}
+#phonePanel .app.a{background:linear-gradient(135deg,#fd9bbd,#f24f83);color:white}
+#phonePanel .app.b{background:#222;color:white}
+#phonePanel .top{height:49px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:19px;font-weight:bold;border-bottom:1px solid #eee;background:white;position:relative;z-index:2}
+#stat{font-size:14px;color:#ff5c8b}
+#feed{height:calc(100% - 101px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;background:white}
+#phonePanel nav{position:absolute;bottom:0;left:0;height:52px;width:100%;display:flex;align-items:center;justify-content:space-around;background:white;border-top:1px solid #eee;font-size:24px;z-index:3}
+#floatingStats{position:fixed;inset:0;z-index:75;pointer-events:none;overflow:hidden}
+.floatStat{position:absolute;display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:5px;background:#393f49c9;color:white;font-size:12px;white-space:nowrap;box-shadow:0 3px 12px #0003;backdrop-filter:blur(5px)}
+.floatStat .symbol{font-size:14px}
+.floatStat.pink .symbol{color:#ff799e}
+.floatStat.blue .symbol{color:#83c7ff}
+
+/* POSTS */
+.post{padding-bottom:15px;border-bottom:1px solid #eee;background:white}
+.postHeader{display:flex;align-items:center;gap:9px;padding:12px 13px;font-size:12px;font-weight:bold}
+.avatar{width:29px;height:29px;background:#ffc9da;border-radius:50%;display:grid;place-items:center}
+.postImage{height:230px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:65px;cursor:pointer}
+.postActions{display:flex;gap:13px;padding:10px 14px;align-items:center}
+.likeButton{border:0;background:transparent;font-size:26px;line-height:1;color:#333;transition:transform .2s}
+.likeButton.liked{color:#ff477c;transform:scale(1.22)}
+.postLikes{font-size:12px;font-weight:bold;padding:0 14px}
+.postCaption{font-size:12px;line-height:1.6;padding:7px 14px;color:#333}
+.bigLike{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.15);color:#ff3c79;font-size:115px;pointer-events:none;z-index:5;animation:bigHeart .9s ease-out forwards}
+@keyframes bigHeart{0%{transform:translate(-50%,-50%) scale(.15);opacity:0}32%{transform:translate(-50%,-50%) scale(1.5);opacity:1}60%{transform:translate(-50%,-50%) scale(1.1);opacity:1}100%{transform:translate(-50%,-90%) scale(1.7);opacity:0}}
+
+/* MINI GAMES */
+.rainPost,.interactiveCard{background:white;border-bottom:1px solid #eee;padding:14px 13px 17px}
+.rainTitle{font-weight:bold;font-size:13px;margin-bottom:10px}
+.rainGame{position:relative;height:250px;overflow:hidden;background:linear-gradient(160deg,#ff94b8,#f64f91)}
+.rainScore{position:absolute;left:12px;top:10px;font-size:14px;color:white;font-weight:bold;z-index:4}
+.rainTip{position:absolute;left:0;right:0;bottom:12px;text-align:center;font-size:11px;color:white;pointer-events:none;z-index:4}
+.rainHeart{position:absolute;top:-45px;background:transparent;border:0;color:white;font-size:29px;z-index:3;animation:fallDown linear forwards}
+.rainHeart.gold{color:#ffe75d}
+.rainHeart.bad{color:#191919}
+@keyframes fallDown{from{transform:translateY(-30px) rotate(-15deg)}to{transform:translateY(350px) rotate(25deg)}}
+.rainStart{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:12px 20px;white-space:nowrap;border:0;border-radius:20px;background:white;color:#ec4e86;font-weight:bold;font-size:12px;z-index:5}
+.rainMessage{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;color:white;font-weight:bold;font-size:22px;pointer-events:none;z-index:4}
+.rainEnd{text-align:center;color:#e04c81;padding-top:10px;font-size:12px}
+.cardLabel{font-size:10px;font-weight:bold;color:#ef598b;letter-spacing:2px;margin-bottom:8px}
+.cardTitle{font-size:15px;font-weight:bold;color:#242424;line-height:1.5;margin-bottom:12px}
+.pollOption{position:relative;width:100%;min-height:44px;border:1px solid #f1bed0;border-radius:12px;background:#fff6f9;margin:5px 0;text-align:left;padding:10px 12px;overflow:hidden;color:#343034;font-size:12px;font-weight:bold}
+.pollFill{position:absolute;left:0;top:0;bottom:0;width:0;background:#ffbfd4;transition:width .8s ease}
+.pollOptionText{position:relative;z-index:1;display:flex;justify-content:space-between;gap:8px}
+.cardSmall{font-size:11px;color:#9d8390;margin-top:10px;line-height:1.5}
+.choiceScene{height:115px;background:linear-gradient(135deg,#ffe3ed,#ffb9d2);border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:48px;margin:10px 0}
+.choiceButtons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.choiceButton{border:1px solid #f2acc4;background:#fff2f7;border-radius:12px;padding:10px 5px;font-size:12px;font-weight:bold;color:#343034;min-height:46px}
+.choiceCount{font-size:11px;color:#bd6b88;text-align:center;margin-top:10px}
+.timePost{padding:19px 13px;text-align:center;background:linear-gradient(145deg,#fcdfeb,#f7c4d7);border-bottom:1px solid #eee}
+.timePost b{display:block;font-size:17px;margin-bottom:8px;color:#2d262a}
+.timePost p{font-size:12px;color:#775967;line-height:1.7}
+.timePost.dark{background:#272727}
+.timePost.dark b,.timePost.dark p{color:#eee}
+.shooterArea{position:relative;height:245px;overflow:hidden;border-radius:14px;background:radial-gradient(circle at center,#342235,#100d18 78%);cursor:pointer;touch-action:manipulation}
+.shooterHud{position:absolute;top:9px;left:12px;right:12px;z-index:5;display:flex;justify-content:space-between;font-size:12px;color:white;font-weight:bold;pointer-events:none}
+.shooterTarget{position:absolute;width:42px;height:42px;display:grid;place-items:center;color:#ff4c85;font-size:36px;line-height:1;border:0;background:transparent;cursor:pointer;filter:drop-shadow(0 0 9px #ff548c88);animation:targetPulse .7s infinite alternate}
+.shooterTarget:after{content:"";position:absolute;inset:0;border:1px solid #ff6e9d55;border-radius:50%}
+@keyframes targetPulse{to{transform:scale(1.2)}}
+.shooterStart{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:12;border:0;border-radius:30px;background:#fff;color:#ef4b81;padding:12px 20px;font-size:13px;font-weight:bold}
+.shooterEnd{position:absolute;inset:0;display:none;place-items:center;text-align:center;color:white;font-weight:bold;font-size:19px;background:#0c0913c9;z-index:11}
+.breakArea{height:250px;position:relative;overflow:hidden;border-radius:14px;background:radial-gradient(circle at 50% 45%,#ffb2ce,#f36c9b);display:flex;align-items:center;justify-content:center;flex-direction:column}
+.breakHeart{border:0;background:none;color:#e82058;font-size:125px;line-height:1;cursor:pointer;user-select:none;text-shadow:0 8px 4px #c6275366,0 0 22px #fff6;filter:drop-shadow(0 8px 5px #9f1b4a33);transition:transform .1s}
+.breakHeart:active{transform:scale(.88)}
+.breakCount{color:white;font-size:12px;font-weight:bold;margin-top:10px;letter-spacing:1px}
+.breakParticle{position:absolute;pointer-events:none;color:#ff1760;font-size:25px;z-index:7}
+.breakReset{display:none;margin-top:8px;background:#fff;border:0;padding:9px 16px;border-radius:20px;color:#e73874;font-size:12px;font-weight:bold}
+
+/* NOTIFICATIONS */
+#socialToast{position:absolute;left:9px;right:9px;top:55px;z-index:20;padding:12px;background:#fff;border:1px solid #f1c7d5;border-radius:16px;box-shadow:0 7px 20px #0002;opacity:0;visibility:hidden;transform:translateY(-15px);transition:.35s;cursor:pointer}
+#socialToast.show{opacity:1;visibility:visible;transform:translateY(0)}
+#socialToast strong{display:block;color:#f25386;font-size:12px;margin-bottom:4px}
+#socialToast span{font-size:12px;color:#444;line-height:1.45}
+#socialToast small{display:block;text-align:right;color:#b0a0a8;margin-top:6px;font-size:10px}
+#phonePanel.phase-adult .phone{filter:saturate(.65)}
+#phonePanel.phase-elderly .phone{filter:saturate(.25)}
+#phonePanel.phase-dead .phone{filter:grayscale(1) contrast(1.12)}
+#phonePanel.phase-dead .top{background:#272727;color:white}
+#phonePanel.phase-dead #stat{color:white}
+#missedCallToast{position:absolute;left:9px;right:9px;top:8px;z-index:35;padding:11px 12px;display:flex;align-items:center;gap:10px;border:1px solid #dedee4;border-radius:15px;background:rgba(250,250,253,.98);color:#1c1c22;box-shadow:0 8px 22px #0003;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-100px);transition:transform .55s ease,opacity .5s ease,visibility .5s}
+#missedCallToast.show{opacity:1;visibility:visible;transform:translateY(0)}
+.missedCallIcon{flex:none;width:35px;height:35px;border-radius:10px;display:grid;place-items:center;background:#fce6eb;color:#c42d52;font-size:21px}
+.missedCallText{min-width:0;flex:1}
+.missedCallText strong{display:block;font-size:11px;color:#b53755}
+.missedCallText b{display:block;font-size:13px;margin:3px 0 2px}
+.missedCallText span{display:block;font-size:11px;line-height:1.4;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.missedCallCount{font-size:10px;color:#999}
+#phonePanel.phase-dead #missedCallToast{display:none}
+
+/* GRAVEYARD */
+#endingStage{position:fixed;inset:0;z-index:1200;display:none;overflow:hidden;background:transparent;cursor:none;isolation:isolate}
+#endingStage.on{display:block}
+#blackScreen{position:absolute;inset:0;background:#030305;opacity:0;transition:opacity .35s linear;z-index:1;pointer-events:none}
+#endingStage.black #blackScreen{opacity:1}
+#deathMessage{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);z-index:20;color:#f4f4f4;font-family:Georgia,serif;text-align:center;font-size:clamp(22px,3.6vw,52px);letter-spacing:.12em;line-height:1.5;padding:28px;opacity:0;transition:opacity 1.1s ease;pointer-events:none;text-shadow:0 2px 22px #000}
+#deathMessage.visible{opacity:1}
+#centerGrave{position:absolute;left:50%;top:65%;width:120px;height:auto;transform:translate(-50%,-70%);transform-origin:center center;object-fit:contain;opacity:0;z-index:16;cursor:pointer;pointer-events:none;filter:grayscale(1) drop-shadow(0 0 5px #ffffff28)}
+#centerGrave.ready{pointer-events:auto}
+#centerGrave.ready:hover{filter:grayscale(1) brightness(1.2) drop-shadow(0 0 18px #ffffff66)}
+#hiddenGraves{position:absolute;inset:0;z-index:8;opacity:0;pointer-events:none;transition:opacity 1.3s ease;-webkit-mask-image:radial-gradient(circle 190px at var(--mx,50%) var(--my,50%),black 0%,black 42%,transparent 100%);mask-image:radial-gradient(circle 190px at var(--mx,50%) var(--my,50%),black 0%,black 42%,transparent 100%)}
+#hiddenGraves.active{opacity:1}
+.hiddenGrave{position:absolute;width:auto;object-fit:contain;transform:translate(-50%,-85%);filter:grayscale(1) brightness(.9);pointer-events:none}
+#flashlight{position:absolute;inset:0;z-index:9;pointer-events:none;opacity:0;background:radial-gradient(circle 195px at var(--mx,50%) var(--my,50%),rgba(235,240,255,.14) 0%,rgba(170,185,220,.055) 42%,transparent 100%);transition:opacity 1s ease}
+#flashlight.active{opacity:1}
+#lightCursor{position:absolute;left:50%;top:50%;width:22px;height:22px;border:1px solid #ffffffb0;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:60;opacity:0;transition:opacity .8s ease;box-shadow:0 0 18px #ffffff66}
+#lightCursor.active{opacity:1}
+#heartBurstLayer{position:absolute;inset:0;z-index:40;pointer-events:none;overflow:hidden}
+.burstHeart{position:absolute;color:#ff315e;pointer-events:none;text-shadow:0 0 14px #ff315e88}
+
+/* LAST NOTIFICATION */
+#finalBlack{position:absolute;inset:0;z-index:100;background:#030305;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 3s ease,visibility 3s}
+#finalBlack.on{opacity:1;visibility:visible;pointer-events:auto}
+#lastNotification{position:absolute;top:25%;left:50%;width:min(400px,88vw);transform:translate(-50%,20px);padding:20px 24px;background:#19191f;color:white;border:1px solid #34343c;border-radius:19px;box-shadow:0 10px 35px #0009;opacity:0;transition:opacity .8s ease,transform .8s ease}
+#lastNotification.visible{opacity:1;transform:translate(-50%,0)}
+#lastNotification .appName{color:#ff5684;font-size:12px;font-weight:bold;letter-spacing:2px;margin-bottom:12px}
+#lastNotification .notifBody{font-size:clamp(15px,1.6vw,20px);line-height:1.4}
+#lastNotification .notifHeart{color:#ff456f;margin-right:7px}
+.finalSentence{position:absolute;width:92%;left:4%;text-align:center;font-family:Georgia,serif;font-size:clamp(24px,3.7vw,52px);letter-spacing:.05em;line-height:1.5;color:#f7f4f6;opacity:0;transform:translateY(18px);transition:opacity 1.5s ease,transform 1.5s ease;pointer-events:none}
+.finalSentence.visible{opacity:1;transform:translateY(0)}
+#goneText{top:55%}
+#profileText{top:70%;font-size:clamp(17px,2.5vw,35px);color:#ff718f}
+
+/* TWO CHOICES */
+#choiceScreen{position:fixed;inset:0;z-index:1500;background:#050505;display:none;align-items:center;justify-content:center;padding:22px;opacity:0;transition:opacity 1.8s ease}
+#choiceScreen.on{display:flex}
+#choiceScreen.visible{opacity:1}
+#ripPanel{width:min(750px,94vw);position:relative;overflow:hidden;padding:46px 38px 34px;background:linear-gradient(150deg,#171719,#0b0b0d);border:1px solid #353539;border-radius:24px;box-shadow:0 30px 100px #000a;color:#f5f5f5;text-align:center}
+#ripPanel:before{content:"";position:absolute;left:15%;right:15%;top:0;height:1px;background:linear-gradient(90deg,transparent,#ffffff45,transparent)}
+#ripIcon{width:66px;height:66px;border:1px solid #45454b;border-radius:50%;display:grid;place-items:center;margin:0 auto 20px;font-size:31px;color:#ccc;background:#1b1b1e}
+#ripPanel h2{margin:0 0 15px;letter-spacing:7px;font-family:Georgia,serif;font-size:34px}
+#ripPanel p{color:#96969d;font-size:14px;line-height:1.7;margin:10px 0}
+#ripPanel h3{font-family:Georgia,serif;font-weight:400;font-size:clamp(22px,2.6vw,32px);margin:17px 0 38px}
+#choiceButtons{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.endingOption{min-height:142px;padding:22px 15px;border-radius:14px;border:1px solid #44444a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;transition:transform .3s,background .3s,border-color .3s,box-shadow .3s}
+.endingOption:hover{transform:translateY(-5px)}
+.endingOption .optIcon{font-size:28px}
+.endingOption strong{font-size:14px;letter-spacing:1.2px}
+.endingOption small{font-size:12px;opacity:.65}
+#putDown{background:#e8e8e7;color:#131316;border-color:#e8e8e7}
+#putDown:hover{background:#fff;box-shadow:0 8px 35px #ffffff2b}
+#oneMore{background:#242427;color:#f2f2f4}
+#oneMore:hover{background:#303036;border-color:#e9547f;box-shadow:0 8px 35px #e9547f22}
+#choiceFooter{font-size:10px;color:#666;letter-spacing:4px;margin-top:26px}
+
+/* SECRET ENDING - BOTH IMAGES ARE 1.2x */
+#secretRoom{position:fixed;inset:0;z-index:1600;background:#eee;display:none;overflow:hidden;opacity:0;transition:opacity 1.5s ease}
+#secretRoom.on{display:block}
+#secretRoom.visible{opacity:1}
+#secretView{position:absolute;inset:0;width:100%;height:100%;overflow:hidden}
+
+/* MAIN CHANGE: 120% INSTEAD OF 100% */
+.secretBackground{
+ position:absolute;
+ left:50%;
+ top:50%;
+ width:120%;
+ height:120%;
+ object-fit:cover;
+ object-position:center center;
+ transform:translate(-50%,-50%);
+}
+#roomMono{z-index:1}
+#roomColor{z-index:2;opacity:0;transition:opacity 2s ease}
+#secretRoom.color #roomColor{opacity:1}
+
+/* INVISIBLE CLICK AREA */
+#windowHotspot{position:absolute;z-index:8;border:0;background:transparent;outline:none;box-shadow:none;cursor:pointer}
+#windowHotspot:focus-visible{outline:2px dashed #e95a86;outline-offset:4px}
+#windowHint{position:absolute;z-index:9;pointer-events:none;color:#f05283;font-size:12px;letter-spacing:6px;font-weight:bold;text-shadow:0 0 12px #ffffff90;animation:blink 1s infinite alternate}
+#secretRoom.color #windowHotspot,#secretRoom.color #windowHint{display:none}
+
+/* GIRL / BOY */
+#windowCharacter{position:absolute;z-index:7;left:45%;bottom:21%;height:21.5%;width:auto;max-width:25%;object-fit:contain;object-position:bottom;opacity:0;transform:translateY(15px);transition:opacity 1.8s ease,transform 1.8s ease;pointer-events:none}
+#secretRoom.color #windowCharacter{opacity:1;transform:translateY(0)}
+
+/* NO ZOOM AFTER CLICK */
+#secretFade{position:absolute;inset:0;background:white;z-index:20;opacity:0;pointer-events:none;transition:opacity 3.5s ease}
+#secretRoom.fadeWhite #secretFade{opacity:1}
+
+/* WHITE ENDING */
+#whiteEnding{position:fixed;inset:0;z-index:1700;background:white;display:none;align-items:center;justify-content:center;text-align:center;padding:30px;opacity:0;transition:opacity 1.2s ease}
+#whiteEnding.on{display:flex}
+#whiteEnding.visible{opacity:1}
+#whiteLine{font-family:Georgia,serif;font-size:clamp(25px,4vw,56px);line-height:1.5;color:#171717;max-width:1000px;opacity:0;transform:translateY(18px);transition:opacity 1.35s ease,transform 1.35s ease}
+#whiteLine.visible{opacity:1;transform:translateY(0)}
+#whiteLine strong{color:#e65482;font-weight:400}
+
+@media(max-width:800px){
+ #logoBox{width:78vw}.people{gap:20px}
+ .person img{width:42vw;height:200px}.person b{font-size:18px}
+ #note{width:75vw}#phonePanel{left:7%;top:7vh}
+ #home{padding-top:38px}.clock{font-size:33px}
+ .gridA{gap:5px;margin-top:45px}
+ #phonePanel .app{width:40px;height:40px}
+ .postImage{height:170px}
+ #goneText{top:55%}#profileText{top:72%}
+ #ripPanel{padding:30px 15px 22px}
+ #ripPanel h2{font-size:27px}
+ #choiceButtons{gap:9px}
+ .endingOption{min-height:115px;padding:15px 7px}
+ .endingOption strong{font-size:11px}
+ .endingOption small{font-size:10px}
+}
+</style>
+</head>
+<body>
+
+<section id="welcome" class="page on">
+ <div id="logoBox"><img src="welcome.png" alt="ONE MORE SCROLL"></div>
+ <div id="startHint">CLICK</div>
+</section>
+
+<section id="select" class="page">
+ <h1>CHOOSE YOUR CHARACTER</h1>
+ <div class="people">
+  <div class="person" id="girl" data-gender="girl">
+   <img src="girl_normal.png" alt="Girl"><b>GIRL</b>
+  </div>
+  <div class="person" id="boy" data-gender="boy">
+   <img src="boy_normal.png" alt="Boy"><b>BOY</b>
+  </div>
+ </div>
+</section>
+
+<section id="namePage" class="page">
+ <h1>WHAT'S YOUR NAME?</h1>
+ <input id="nameInput" maxlength="20" placeholder="Your name">
+ <button id="go">CONTINUE</button>
+</section>
+
+<section id="main" class="page">
+ <div id="track">
+  <img id="bg" src="background.png" alt="Room">
+  <div id="bedHotspot"></div>
+  <div id="ringFx">
+   <span class="ringLine"></span>
+   <span class="ringLine"></span>
+   <span class="ringLine"></span>
+  </div>
+  <div id="phoneHint" class="hint">CLICK</div>
+  <img id="walker" alt="Character">
+  <div id="sofaHint" class="hint">CLICK</div>
+  <div id="sofaHotspot"></div>
+ </div>
+
+ <div id="note">
+  <div id="noteIcon">♥</div>
+  <div id="noteText"></div>
+ </div>
+
+ <div id="floatingStats"></div>
+
+ <div id="phonePanel">
+  <div class="phone">
+   <div id="home">
+    <div class="clock">10:24</div>
+    <p>Social Media</p>
+    <div class="gridA">
+     <button id="appA" class="app a">◎</button>
+     <button class="app b">♪</button>
+     <i class="app"></i>
+     <i class="app"></i>
+    </div>
+   </div>
+
+   <div class="top">
+    scrollgram <span id="stat">♥ 0</span>
+   </div>
+   <div id="feed"></div>
+
+   <div id="socialToast">
+    <strong>NEW NOTIFICATION ♥</strong>
+    <span id="socialToastText"></span>
+    <small>TAP TO OPEN</small>
+   </div>
+
+   <div id="missedCallToast">
+    <div class="missedCallIcon">↙</div>
+    <div class="missedCallText">
+     <strong>MISSED CALL</strong>
+     <b id="missedCaller">MOM</b>
+     <span id="missedCallMessage"></span>
+    </div>
+    <small class="missedCallCount" id="missedCallNumber">1</small>
+   </div>
+
+   <nav>
+    <span>⌂</span><span>⌕</span><span>＋</span>
+    <span>♡</span><span>◉</span>
+   </nav>
+  </div>
+ </div>
+</section>
+
+<section id="endingStage">
+ <div id="blackScreen"></div>
+ <div id="deathMessage">YOUR SCROLLING TIME IS OVER</div>
+ <div id="hiddenGraves"></div>
+ <div id="flashlight"></div>
+ <img id="centerGrave" src="graveyard.png" alt="Grave">
+ <div id="heartBurstLayer"></div>
+ <div id="lightCursor"></div>
+
+ <div id="finalBlack">
+  <div id="lastNotification">
+   <div class="appName">SCROLLGRAM · NOW</div>
+   <div class="notifBody">
+    <span class="notifHeart">♥</span>
+    Someone just liked your post.
+   </div>
+  </div>
+  <div id="goneText" class="finalSentence"></div>
+  <div id="profileText" class="finalSentence">
+   BUT YOUR SOCIAL MEDIA PROFILE IS STILL HERE.
+  </div>
+ </div>
+</section>
+
+<section id="choiceScreen">
+ <div id="ripPanel">
+  <div id="ripIcon">☠</div>
+  <h2>R.I.P.</h2>
+  <p>You spent your whole life scrolling.</p>
+  <h3>Was it worth it?</h3>
+
+  <div id="choiceButtons">
+   <button id="putDown" class="endingOption">
+    <span class="optIcon">⏻</span>
+    <strong>PUT IT DOWN</strong>
+    <small>Choose real life</small>
+   </button>
+   <button id="oneMore" class="endingOption">
+    <span class="optIcon">▯</span>
+    <strong>ONE MORE SCROLL</strong>
+    <small>Start scrolling again</small>
+   </button>
+  </div>
+  <div id="choiceFooter">THE CHOICE IS YOURS</div>
+ </div>
+</section>
+
+<section id="secretRoom">
+ <div id="secretView">
+  <img id="roomMono" class="secretBackground" src="b1.png" alt="Room">
+  <img id="roomColor" class="secretBackground" src="b2.png" alt="Colorful room">
+  <button id="windowHotspot" aria-label="Look outside"></button>
+  <div id="windowHint">CLICK</div>
+  <img id="windowCharacter" src="ge.png" alt="Looking outside">
+ </div>
+ <div id="secretFade"></div>
+</section>
+
+<section id="whiteEnding">
+ <div id="whiteLine"></div>
+</section>
+
+<div id="cursorPhone"></div>
+<div id="glow"></div>
+
+<audio id="ding" src="notification.mp3" preload="auto"></audio>
+<audio id="steps" src="walkingsound.mp3" preload="auto" loop></audio>
+<audio id="churchSound" src="church_bell.mp3" preload="auto"></audio>
+<audio id="crowSound" src="crow.mp3" preload="auto"></audio>
+<audio id="natureSound" src="nature.mp3" preload="auto" loop></audio>
+
+<script>
+const $=id=>document.getElementById(id);
+
+/* ============ EDIT HERE ============ */
+const CALL_DELAYS=[9000,13000,18000];
+
+const CALLERS={
+ young:[
+  {name:"MOM",message:"Are you coming home?"},
+  {name:"BEST FRIEND",message:"Where are you?"},
+  {name:"MOM",message:"Dinner is getting cold."},
+  {name:"BEST FRIEND",message:"We're waiting for you."}
+ ],
+ adult:[
+  {name:"MOM",message:"Haven't heard from you lately."},
+  {name:"BEST FRIEND",message:"We don't talk anymore."},
+  {name:"MOM",message:"Can you call me back?"},
+  {name:"OLD FRIEND",message:"Remember our old days?"}
+ ],
+ elderly:[
+  {name:"MOM",message:"I miss your voice."},
+  {name:"OLD FRIEND",message:"It's been years."},
+  {name:"FAMILY",message:"Please call us back."}
+ ]
+};
+
+const WINDOW_AREA={
+ left:53,
+ top:20,
+ width:21,
+ height:45
+};
+
+const WINDOW_CHARACTER={
+ left:45,
+ bottom:21,
+ height:21.5
+};
+
+const WHITE_FADE_DELAY=3500;
+const WHITE_SCREEN_DELAY=7200;
+const BELL_EARLY_DELAY=800;
+const SKELETON_END_DELAY=1400;
+const BLACKOUT_DURATION=350;
+
+const POSE_SCROLL_DISTANCE=800;
+const AGING_FADE_DURATION=2400;
+const BELL_TEXT_DELAY=700;
+const BELL_SCENE_DURATION=3200;
+const GRAVE_MOVE_DURATION=4500;
+const HIDDEN_GRAVE_COLUMNS=11;
+const HIDDEN_GRAVE_ROWS=7;
+const MIN_BURST_HEARTS=280;
+const MAX_BURST_HEARTS=450;
+const FINAL_FADE_DELAY=5600;
+const FINAL_FADE_DURATION=3000;
+const FINAL_NOTIFICATION_DELAY=700;
+const FIRST_SENTENCE_DELAY=2500;
+const SECOND_SENTENCE_DELAY=5200;
+const CHOICE_DELAY=8700;
+const SHOOTER_TIME=15;
+const SHOOTER_TARGETS=5;
+const BREAK_HEART_TAPS=12;
+const BREAK_HEART_REWARD=10;
+const FLOAT_INTERVAL=950;
+
+/* STATE */
+let page="welcome",selected="",playerName="",busy=false;
+let states={girl:"normal",boy:"normal"};
+let noteCount=0,noteLoop=null,phoneClicked=false,canScroll=false,satDown=false;
+let scrollX=0,walkFrame=0,lastSwap=0,stopStepsTimer=null;
+let totalLikes=0,postNumber=0,feedItemCount=0,pollNumber=0,choiceNumber=0;
+let activeRain=null,toastTimer=null,toastLoop=null,floatTimer=null;
+let socialOpen=false,socialPhase="young",lastAgePhase="",totalInteractions=0;
+let missedCallTimer=null,missedCallHideTimer=null,missedCallCount=0,missedCallHistory=[];
+let missedCallPhaseIndex={young:0,adult:0,elderly:0};
+let endingStarted=false,endingReady=false,graveClicked=false,skeletonLocation=null;
+let endingTimers=[],poseStep=-1,poseAnchor=0,poseLoading=false;
+let poseSession=0,poseErrorFile="",sittingReady=false;
+let activeShooterStop=null,shooterStops=[];
+let windowOpened=false,secretTimers=[],bellStarted=false;
+let roomRun=0;
+
+function later(fn,ms){
+ const id=setTimeout(fn,ms);
+ endingTimers.push(id);
+ return id;
+}
+function secretLater(fn,ms){
+ const id=setTimeout(fn,ms);
+ secretTimers.push(id);
+ return id;
+}
+
+function resizePhone(){
+ const h=innerHeight*1.04/560;
+ const w=innerWidth*.38/290;
+ $("phonePanel").style.setProperty(
+  "--phoneZoom",Math.max(.55,Math.min(1.85,h,w))
+ );
+}
+addEventListener("resize",resizePhone);
+resizePhone();
+
+/* FLOATING SOCIAL STATS */
+const statTypes=[
+ {icon:"♥",cls:"pink"},
+ {icon:"👍",cls:"blue"},
+ {icon:"✉",cls:"blue"},
+ {icon:"♥",cls:"pink"}
+];
+
+function makeFloatingStat(){
+ if(!socialOpen||!satDown||endingStarted||socialPhase==="dead")return;
+ const area=$("floatingStats");
+ if(area.children.length>=12)return;
+
+ const phone=$("phonePanel").getBoundingClientRect();
+ const person=$("walker").getBoundingClientRect();
+ const left=phone.right+18;
+ const right=person.left>left+100?person.left-25:innerWidth-80;
+ const x=Math.max(0,Math.min(
+  innerWidth-85,left+Math.random()*Math.max(20,right-left)
+ ));
+ const y=innerHeight*(.18+Math.random()*.48);
+ const type=statTypes[Math.random()*statTypes.length|0];
+
+ const el=document.createElement("div");
+ el.className="floatStat "+type.cls;
+ const symbol=document.createElement("span");
+ symbol.className="symbol";
+ symbol.textContent=type.icon;
+ const number=document.createElement("span");
+ number.textContent=(Math.floor(20+Math.random()*2800)).toLocaleString();
+ el.append(symbol,number);
+ el.style.left=x+"px";
+ el.style.top=y+"px";
+ area.append(el);
+
+ el.animate([
+  {opacity:0,transform:"translateY(24px) scale(.7)"},
+  {opacity:1,transform:"translateY(0) scale(1)",offset:.22},
+  {opacity:1,transform:"translateY(-28px) scale(1)",offset:.7},
+  {opacity:0,transform:"translateY(-65px) scale(.85)"}
+ ],{duration:2600,easing:"ease-out"}).onfinish=()=>el.remove();
+}
+
+function stopFloatingStats(){
+ clearInterval(floatTimer);
+ floatTimer=null;
+ $("floatingStats").replaceChildren();
+}
+
+function startFloatingStats(){
+ stopFloatingStats();
+ floatTimer=setInterval(makeFloatingStat,FLOAT_INTERVAL);
+ makeFloatingStat();
+}
+
+/* MISSED CALLS */
+function stopMissedCalls(){
+ clearTimeout(missedCallTimer);
+ clearTimeout(missedCallHideTimer);
+ missedCallTimer=null;
+ missedCallHideTimer=null;
+ $("missedCallToast").classList.remove("show");
+}
+
+function scheduleNextMissedCall(){
+ clearTimeout(missedCallTimer);
+ if(!socialOpen||endingStarted||socialPhase==="dead")return;
+ const delay=CALL_DELAYS[Math.min(missedCallCount,CALL_DELAYS.length-1)];
+ missedCallTimer=setTimeout(()=>{
+  if(!socialOpen||endingStarted||socialPhase==="dead")return;
+  showMissedCall();
+  scheduleNextMissedCall();
+ },delay);
+}
+
+function showMissedCall(){
+ const phase=["adult","elderly"].includes(socialPhase)?socialPhase:"young";
+ const list=CALLERS[phase];
+ const call=list[missedCallPhaseIndex[phase]++%list.length];
+
+ missedCallCount++;
+ missedCallHistory.push({...call,phase});
+ $("missedCaller").textContent=call.name;
+ $("missedCallMessage").textContent=call.message;
+ $("missedCallNumber").textContent=missedCallCount;
+
+ const toast=$("missedCallToast");
+ toast.classList.remove("show");
+ void toast.offsetWidth;
+ toast.classList.add("show");
+
+ clearTimeout(missedCallHideTimer);
+ missedCallHideTimer=setTimeout(()=>{
+  toast.classList.remove("show");
+ },4800);
+}
+
+/* CHARACTER AGING */
+const girlPoseSettings=[
+ {file:"girl_pose_02_lean_scroll.png",left:.902,height:23.21,bottom:29},
+ {file:"girl_pose_04_curl_side.png",left:.885,height:26.62,bottom:26},
+ {file:"girl_pose_06_hug_knees.png",left:.907,height:20.49,bottom:29},
+ {file:"girl_pose_07_face_down_tired.png",left:.885,height:27.6,bottom:22},
+ {file:"girl_pose_02_lean_scroll.png",left:.902,height:23.21,bottom:29},
+ {file:"girl_adult.png",left:.902,height:23.21,bottom:29},
+ {file:"girl_elderly.png",left:.902,height:23.21,bottom:29},
+ {file:"girl_die.png",left:.902,height:22.05,bottom:29}
+];
+
+const boyPoseSettings=[
+ {file:"boy_pose_02_lean_scroll.png",left:.902,height:23.21,bottom:29},
+ {file:"boy_pose_04_curl_side.png",left:.885,height:26.62,bottom:26},
+ {file:"boy_pose_06_hug_knees.png",left:.907,height:20.49,bottom:29},
+ {file:"boy_pose_07_face_down_tired.png",left:.885,height:27.6,bottom:22},
+ {file:"boy_pose_02_lean_scroll.png",left:.902,height:23.21,bottom:29},
+ {file:"boy_adult.png",left:.902,height:22.05,bottom:29},
+ {file:"boy_elderly.png",left:.902,height:23.21,bottom:29},
+ {file:"boy_die.png",left:.902,height:22.05,bottom:29}
+];
+
+const poses=()=>selected==="boy"?boyPoseSettings:girlPoseSettings;
+
+function styleCharacterImage(el,p){
+ el.style.transition="none";
+ el.style.transform="none";
+ el.style.left=$("track").scrollWidth*p.left+"px";
+ el.style.height=p.height+"%";
+ el.style.width="auto";
+ el.style.bottom=p.bottom+"%";
+}
+
+function applyCharacterPose(p){
+ $("walker").src=p.file;
+ styleCharacterImage($("walker"),p);
+}
+
+function playChurchBell(){
+ if(bellStarted)return;
+ bellStarted=true;
+ const bell=$("churchSound");
+ bell.pause();
+ bell.currentTime=0;
+ bell.volume=.8;
+ bell.play().catch(()=>{});
+}
+
+function finishPoseChange(index){
+ poseStep=index;
+ poseAnchor=$("feed").scrollTop;
+ poseLoading=false;
+ updateSocialAge(index);
+
+ if(index===7&&!endingStarted){
+  stopMissedCalls();
+  const session=poseSession;
+  later(()=>{
+   if(session===poseSession)playChurchBell();
+  },BELL_EARLY_DELAY);
+  later(()=>{
+   if(session===poseSession)startEnding();
+  },SKELETON_END_DELAY);
+ }
+}
+
+function changeCharacterPose(index){
+ if(!satDown||!sittingReady||poseLoading||
+    index<=poseStep||index>=poses().length)return;
+
+ poseLoading=true;
+ const session=poseSession;
+ const p=poses()[index];
+ const img=new Image();
+
+ img.onerror=()=>{
+  if(session!==poseSession)return;
+  poseLoading=false;
+  poseAnchor=$("feed").scrollTop;
+  if(poseErrorFile!==p.file){
+   poseErrorFile=p.file;
+   alert("IMAGE NOT FOUND!\n\n"+p.file);
+  }
+ };
+
+ img.onload=()=>{
+  if(session!==poseSession||!satDown)return;
+  const w=$("walker");
+
+  if(index>=5){
+   const next=document.createElement("img");
+   next.src=p.file;
+   next.className="ageOverlay";
+   Object.assign(next.style,{
+    position:"absolute",display:"block",
+    pointerEvents:"none",zIndex:"23",opacity:"0"
+   });
+
+   styleCharacterImage(next,p);
+   $("track").append(next);
+
+   const a=w.animate([{opacity:1},{opacity:0}],{
+    duration:AGING_FADE_DURATION,
+    fill:"forwards",easing:"ease-in-out"
+   });
+   const b=next.animate([{opacity:0},{opacity:1}],{
+    duration:AGING_FADE_DURATION,
+    fill:"forwards",easing:"ease-in-out"
+   });
+
+   b.onfinish=()=>{
+    if(session!==poseSession){
+     a.cancel();b.cancel();next.remove();return;
+    }
+    w.style.opacity="0";
+    applyCharacterPose(p);
+    a.cancel();b.cancel();
+    w.style.opacity="1";
+    next.remove();
+    finishPoseChange(index);
+   };
+  }else{
+   const a=w.animate([{opacity:1},{opacity:0}],{
+    duration:400,fill:"forwards"
+   });
+   a.onfinish=()=>{
+    if(session!==poseSession)return;
+    a.cancel();
+    w.style.opacity="0";
+    applyCharacterPose(p);
+
+    const b=w.animate([{opacity:0},{opacity:1}],{
+     duration:600,fill:"forwards"
+    });
+    b.onfinish=()=>{
+     if(session!==poseSession)return;
+     b.cancel();
+     w.style.opacity="1";
+     finishPoseChange(index);
+    };
+   };
+  }
+ };
+ img.src=p.file;
+}
+
+function checkPoseProgress(){
+ if(!satDown||!sittingReady||poseLoading||
+    $("home").style.display!=="none")return;
+ const next=poseStep+1;
+ if(next<poses().length&&
+    $("feed").scrollTop-poseAnchor>=POSE_SCROLL_DISTANCE){
+  changeCharacterPose(next);
+ }
+}
+
+function updateSocialAge(i){
+ socialPhase=i>=7?"dead":i>=6?"elderly":i>=5?"adult":"young";
+ $("phonePanel").classList.remove(
+  "phase-adult","phase-elderly","phase-dead"
+ );
+ if(socialPhase!=="young"){
+  $("phonePanel").classList.add("phase-"+socialPhase);
+ }
+ if(socialPhase==="dead"){
+  stopMissedCalls();
+  stopFloatingStats();
+ }
+ if(socialPhase===lastAgePhase)return;
+ lastAgePhase=socialPhase;
+
+ if(i===5){
+  appendSpecialMessage("TIME IS PASSING","Another year. Another scroll.");
+  showSocialToast("You have 23 new notifications!");
+ }
+ if(i===6){
+  appendSpecialMessage("REMEMBER THIS?","You posted this 30 years ago.");
+  showSocialToast("A memory from many years ago...");
+ }
+ if(i===7){
+  appendSpecialMessage("YOU REACHED THE END","But the feed never ends.",true);
+ }
+}
+
+/* PAGES */
+function show(id){
+ document.querySelectorAll(".page").forEach(p=>p.classList.remove("on"));
+ $(id).classList.add("on");
+ page=id;
+ const custom=id==="welcome"||id==="select";
+ $("cursorPhone").style.display=custom?"block":"none";
+ document.body.style.cursor=custom?"none":"default";
+}
+
+document.addEventListener("mousemove",e=>{
+ $("cursorPhone").style.left=e.clientX+"px";
+ $("cursorPhone").style.top=e.clientY+"px";
+ $("glow").style.left=e.clientX+"px";
+ $("glow").style.top=e.clientY+"px";
+
+ if(page==="welcome"){
+  $("logoBox").style.transform=
+   `translate(${(e.clientX-innerWidth/2)/45}px,${(e.clientY-innerHeight/2)/35}px)`;
+  const r=$("logoBox").getBoundingClientRect();
+  $("glow").style.opacity=
+   e.clientX>r.left&&e.clientX<r.right&&
+   e.clientY>r.top&&e.clientY<r.bottom?1:0;
+ }else if(page==="select"&&!busy){
+  let hit=false;
+  ["girl","boy"].forEach(id=>{
+   const el=$(id),r=el.getBoundingClientRect();
+   const d=Math.hypot(
+    e.clientX-r.left-r.width/2,
+    e.clientY-r.top-r.height*.42
+   );
+   const mood=d<220?"scared":"normal";
+   if(states[id]!==mood){
+    states[id]=mood;
+    el.querySelector("img").src=id+"_"+mood+".png";
+    el.classList.toggle("scared",mood==="scared");
+   }
+   if(d<220)hit=true;
+  });
+  $("glow").style.opacity=hit?1:0;
+ }else{
+  $("glow").style.opacity=0;
+ }
+});
+
+$("welcome").onclick=()=>show("select");
+
+function explodeHearts(x,y){
+ for(let i=0;i<160;i++){
+  const h=document.createElement("span");
+  h.className="heart";
+  h.textContent="♥";
+  h.style.left=x+"px";
+  h.style.top=y+"px";
+  h.style.fontSize=14+Math.random()*34+"px";
+  h.style.color=["#ff174f","#ff4169","#ff7798","#ffabc0"][
+   Math.random()*4|0
+  ];
+  document.body.append(h);
+
+  const a=Math.random()*Math.PI*2;
+  const d=90+Math.random()*Math.max(innerWidth,innerHeight)*.7;
+  const dx=Math.cos(a)*d,dy=Math.sin(a)*d;
+
+  h.animate([
+   {transform:"translate(-50%,-50%) scale(.25)",opacity:1},
+   {transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px))`,opacity:0}
+  ],{duration:1100+Math.random()*900,fill:"forwards"}).onfinish=()=>h.remove();
+ }
+}
+
+document.querySelectorAll(".person").forEach(card=>{
+ card.onclick=()=>{
+  if(busy)return;
+  busy=true;
+  selected=card.dataset.gender;
+  card.classList.remove("scared");
+  card.querySelector("img").src=selected+"_skeleton.png";
+  document.querySelectorAll(".person").forEach(p=>{
+   if(p!==card)p.classList.add("fade");
+  });
+  const r=card.getBoundingClientRect();
+  explodeHearts(r.left+r.width/2,r.top+r.height/2);
+  setTimeout(()=>{
+   show("namePage");
+   $("nameInput").focus();
+  },2100);
+ };
+});
+
+function enterRoom(){
+ playerName=$("nameInput").value.trim();
+ if(!playerName){
+  $("nameInput").focus();
+  return;
+ }
+ show("main");
+ initRoom();
+}
+$("go").onclick=enterRoom;
+$("nameInput").onkeydown=e=>{
+ if(e.key==="Enter")enterRoom();
+};
+
+/* ROOM INITIALIZATION */
+function initRoom(){
+ roomRun++;
+ const thisRun=roomRun;
+
+ clearInterval(noteLoop);
+ clearInterval(toastLoop);
+ clearTimeout(toastTimer);
+ clearTimeout(stopStepsTimer);
+ stopMissedCalls();
+ stopFloatingStats();
+ if(activeRain)activeRain();
+ shooterStops.forEach(fn=>fn());
+ shooterStops=[];
+ activeShooterStop=null;
+ endingTimers.forEach(clearTimeout);
+ endingTimers=[];
+ secretTimers.forEach(clearTimeout);
+ secretTimers=[];
+
+ $("natureSound").pause();
+ $("natureSound").currentTime=0;
+ $("natureSound").volume=.75;
+
+ bellStarted=false;
+ noteCount=0;
+ phoneClicked=false;
+ canScroll=false;
+ satDown=false;
+ scrollX=0;
+ walkFrame=0;
+ socialOpen=false;
+ socialPhase="young";
+ lastAgePhase="";
+ totalLikes=0;
+ totalInteractions=0;
+ missedCallCount=0;
+ missedCallHistory=[];
+ missedCallPhaseIndex={young:0,adult:0,elderly:0};
+ endingStarted=false;
+ endingReady=false;
+ graveClicked=false;
+ skeletonLocation=null;
+ windowOpened=false;
+
+ $("endingStage").classList.remove("on","black");
+ $("deathMessage").classList.remove("visible");
+ $("centerGrave").classList.remove("ready");
+ $("centerGrave").style.opacity="0";
+ $("centerGrave").style.transition="none";
+ $("hiddenGraves").classList.remove("active");
+ $("hiddenGraves").replaceChildren();
+ $("flashlight").classList.remove("active");
+ $("lightCursor").classList.remove("active");
+ $("heartBurstLayer").replaceChildren();
+
+ $("finalBlack").classList.remove("on");
+ $("lastNotification").classList.remove("visible");
+ $("goneText").classList.remove("visible");
+ $("profileText").classList.remove("visible");
+ $("choiceScreen").classList.remove("on","visible");
+ $("secretRoom").classList.remove("on","visible","color","fadeWhite");
+ $("whiteEnding").classList.remove("on","visible");
+ $("whiteLine").classList.remove("visible");
+ $("whiteLine").replaceChildren();
+
+ for(const id of ["churchSound","crowSound","ding","steps"]){
+  $(id).pause();
+  $(id).currentTime=0;
+ }
+
+ $("stat").textContent="♥ 0";
+
+ poseSession++;
+ poseStep=-1;
+ poseAnchor=0;
+ poseLoading=false;
+ poseErrorFile="";
+ sittingReady=false;
+
+ $("track").querySelectorAll(".ageOverlay").forEach(e=>e.remove());
+ $("track").style.transform="translateX(0)";
+ for(const id of [
+  "phoneHint","sofaHint","sofaHotspot","walker","ringFx"
+ ]){
+  $(id).style.display="none";
+ }
+
+ $("walker").style.opacity="1";
+ $("note").classList.remove("show");
+ $("phonePanel").classList.remove(
+  "visible","phase-adult","phase-elderly","phase-dead"
+ );
+ $("home").style.display="block";
+ $("socialToast").classList.remove("show");
+
+ $("feed").replaceChildren();
+ feedItemCount=0;
+ postNumber=0;
+ pollNumber=0;
+ choiceNumber=0;
+ appendFeed();
+ resizePhone();
+
+ setTimeout(()=>{
+  if(thisRun!==roomRun||phoneClicked||page!=="main")return;
+  fireNotification();
+  noteLoop=setInterval(fireNotification,2200);
+ },900);
+}
+
+function fireNotification(){
+ if(phoneClicked||page!=="main")return;
+ noteCount++;
+ const label=document.createElement("small");
+ const message=document.createElement("div");
+ label.textContent="NOW";
+ message.textContent=playerName+", you have "+noteCount+
+  " new notification"+(noteCount>1?"s":"")+"!";
+ $("noteText").replaceChildren(label,message);
+ $("ding").currentTime=0;
+ $("ding").play().catch(()=>{});
+ $("note").classList.remove("show");
+ void $("note").offsetWidth;
+ $("note").classList.add("show");
+ $("ringFx").style.display="block";
+ if(noteCount>=3)$("phoneHint").style.display="block";
+}
+
+function startCharacter(){
+ if(phoneClicked)return;
+ phoneClicked=true;
+ clearInterval(noteLoop);
+ $("note").classList.remove("show");
+ $("phoneHint").style.display="none";
+ $("ringFx").style.display="none";
+
+ const w=$("walker");
+ Object.assign(w.style,{
+  display:"block",transition:"none",
+  transform:"none",height:"38.5%",bottom:"13.7%"
+ });
+ w.src=selected+"_walk1.png";
+ w.style.left=selected==="girl"?"-500px":"-320px";
+ const stop=$("track").scrollWidth*(selected==="girl"?.008:.03);
+ const session=poseSession;
+
+ requestAnimationFrame(()=>{
+  w.style.transition="left 1.2s ease";
+  w.style.left=stop+"px";
+ });
+
+ setTimeout(()=>{
+  if(session!==poseSession)return;
+  w.style.transition="none";
+  w.src=selected+"_walk1.png";
+  canScroll=true;
+ },1300);
+}
+
+$("bedHotspot").onclick=startCharacter;
+$("phoneHint").onclick=startCharacter;
+
+function moveScene(delta){
+ if(!canScroll||satDown)return;
+ const max=Math.max(0,$("track").scrollWidth-innerWidth);
+ const prev=scrollX;
+ scrollX=Math.max(0,Math.min(max,scrollX+delta));
+ if(scrollX===prev)return;
+
+ $("track").style.transform=`translateX(${-scrollX}px)`;
+ const p=max?scrollX/max:0;
+ const start=$("track").scrollWidth*(selected==="girl"?.008:.03);
+ const end=$("track").scrollWidth*.865;
+ $("walker").style.left=start+(end-start)*p+"px";
+
+ if(performance.now()-lastSwap>170){
+  walkFrame=1-walkFrame;
+  $("walker").src=selected+(walkFrame?"_walk.png":"_walk1.png");
+  lastSwap=performance.now();
+ }
+ if($("steps").paused)$("steps").play().catch(()=>{});
+ clearTimeout(stopStepsTimer);
+ stopStepsTimer=setTimeout(()=>$("steps").pause(),150);
+ $("sofaHint").style.display=p>.87?"block":"none";
+ $("sofaHotspot").style.display=p>.87?"block":"none";
+}
+
+window.addEventListener("wheel",e=>{
+ if(page!=="main")return;
+ if(satDown&&e.target.closest("#phonePanel"))return;
+ e.preventDefault();
+ moveScene(e.deltaY);
+},{passive:false});
+
+function sitOnSofa(){
+ if(satDown)return;
+ satDown=true;
+ canScroll=false;
+ $("steps").pause();
+ $("sofaHint").style.display="none";
+ $("sofaHotspot").style.display="none";
+
+ const w=$("walker");
+ const session=poseSession;
+ const a=w.animate([{opacity:1},{opacity:0}],{
+  duration:400,fill:"forwards"
+ });
+ a.onfinish=()=>{
+  if(session!==poseSession)return;
+  a.cancel();
+  w.style.opacity="0";
+  applyCharacterPose(poses()[0]);
+  const b=w.animate([{opacity:0},{opacity:1}],{
+   duration:600,fill:"forwards"
+  });
+  b.onfinish=()=>{
+   if(session!==poseSession)return;
+   b.cancel();
+   w.style.opacity="1";
+   poseStep=0;
+   poseAnchor=$("feed").scrollTop;
+   sittingReady=true;
+  };
+ };
+ setTimeout(()=>{
+  if(session!==poseSession)return;
+  $("phonePanel").classList.add("visible");
+  $("home").style.display="block";
+ },500);
+}
+
+$("sofaHotspot").onclick=sitOnSofa;
+$("sofaHint").onclick=sitOnSofa;
+
+/* SCROLLGRAM POSTS */
+function make(tag,cls,txt){
+ const e=document.createElement(tag);
+ if(cls)e.className=cls;
+ if(txt!==undefined)e.textContent=txt;
+ return e;
+}
+function addLikes(n){
+ totalLikes=Math.max(0,totalLikes+n);
+ $("stat").textContent="♥ "+totalLikes;
+}
+
+const posts=[
+ ["daily.mood","☁️","#e3e8f0","Slow mornings, quiet moments."],
+ ["little.traveler","🌴","#fbe5b4","Wish you were here!"],
+ ["happy.days","🌷","#f8dce8","A little happiness every day."],
+ ["night.walk","🌙","#d7d8e7","The city never sleeps."],
+ ["coffee.time","☕","#eddfd3","Just one more coffee."],
+ ["weekend.fun","🎧","#d9d7f5","My favorite playlist."],
+ ["sweet.life","🍰","#ffebd9","Dessert first!"],
+ ["sunset.club","🌅","#f8d7c9","Golden hour."]
+];
+
+function createPost(){
+ const p=posts[postNumber++%posts.length];
+ const article=make("article","post");
+ const header=make("div","postHeader");
+ header.append(make("span","avatar","♥"),make("span","",p[0]));
+ const photo=make("div","postImage",p[1]);
+ photo.style.background=p[2];
+ const actions=make("div","postActions");
+ const like=make("button","likeButton","♡");
+ actions.append(like,make("span","","♧"),make("span","","➤"));
+ const countLabel=make("div","postLikes","0 likes");
+ const caption=make("div","postCaption",p[0]+"  "+p[3]);
+ let count=0;
+
+ function giveLike(){
+  count++;
+  totalInteractions++;
+  addLikes(1);
+  like.classList.add("liked");
+  like.textContent="♥";
+  countLabel.textContent=count+" likes";
+  const h=make("span","bigLike","♥");
+  photo.append(h);
+  setTimeout(()=>h.remove(),950);
+ }
+
+ like.onclick=giveLike;
+ photo.ondblclick=giveLike;
+ article.append(header,photo,actions,countLabel,caption);
+ return article;
+}
+
+const polls=[
+ ["Which one would you choose?","☕ Coffee","🧋 Bubble Tea"],
+ ["One free day. What would you do?","😴 Sleep all day","📱 Scroll all day"],
+ ["Which is more important?","❤️ Love","📶 Wi-Fi"],
+ ["It's 3 AM. What now?","🌙 Go to sleep","📱 One more reel"],
+ ["Pick your dream weekend","🏝️ Travel","🛋️ Stay home"],
+ ["What would you save first?","📷 My photos","🔋 My battery"]
+];
+
+function createPoll(){
+ const p=polls[pollNumber++%polls.length];
+ const card=make("section","interactiveCard");
+ card.append(
+  make("div","cardLabel","QUICK POLL ♥"),
+  make("div","cardTitle",p[0])
+ );
+ const result=make("div","cardSmall","Vote to see what everyone thinks.");
+ const weights=[Math.round(25+Math.random()*50),0];
+ weights[1]=100-weights[0];
+ const buttons=[];
+
+ [1,2].forEach((j,i)=>{
+  const b=make("button","pollOption");
+  const fill=make("span","pollFill");
+  const label=make("span","pollOptionText",p[j]);
+  b.append(fill,label);
+  card.append(b);
+  buttons.push({b,fill,label,i});
+  b.onclick=()=>{
+   if(b.disabled)return;
+   totalInteractions++;
+   addLikes(5);
+   makeFloatingStat();
+   buttons.forEach(item=>{
+    item.b.disabled=true;
+    item.fill.style.width=weights[item.i]+"%";
+    item.label.textContent=p[item.i+1]+"  "+weights[item.i]+"%";
+   });
+   result.textContent="Thanks for voting! +5 hearts";
+  };
+ });
+ card.append(result);
+ return card;
+}
+
+const choices=[
+ ["☕","🧋","Coffee","Bubble Tea"],
+ ["🐱","🐶","Cats","Dogs"],
+ ["🌙","☀️","Night","Morning"],
+ ["🍕","🍔","Pizza","Burger"],
+ ["🎧","🎬","Music","Movies"],
+ ["🏖️","🏔️","Beach","Mountains"],
+ ["🍓","🍫","Strawberry","Chocolate"],
+ ["📱","😴","Phone","Sleep"]
+];
+
+function createThisOrThat(){
+ const card=make("section","interactiveCard");
+ const title=make("div","cardTitle","Don't think. Just choose!");
+ const scene=make("div","choiceScene");
+ const options=make("div","choiceButtons");
+ const counter=make("div","choiceCount");
+ let round=0;
+ const offset=choiceNumber++*2;
+ card.append(
+  make("div","cardLabel","THIS OR THAT?"),
+  title,scene,options,counter
+ );
+
+ function draw(){
+  const p=choices[(offset+round)%choices.length];
+  scene.textContent=p[0]+" VS "+p[1];
+  options.replaceChildren();
+  counter.textContent="CHOICE "+(round+1)+" / 5";
+  [2,3].forEach(i=>{
+   const b=make("button","choiceButton",p[i]);
+   options.append(b);
+   b.onclick=()=>{
+    totalInteractions++;
+    addLikes(2);
+    makeFloatingStat();
+    round++;
+    if(round<5){
+     draw();
+    }else{
+     scene.textContent="🎉";
+     title.textContent="You can't stop choosing!";
+     counter.textContent="+10 hearts collected!";
+     options.replaceChildren();
+     const again=make("button","choiceButton","PLAY AGAIN");
+     again.onclick=()=>{
+      round=0;
+      title.textContent="Don't think. Just choose!";
+      draw();
+     };
+     options.append(again);
+    }
+   };
+  });
+ }
+ draw();
+ return card;
+}
+
+/* HEART RAIN */
+function createHeartRain(){
+ const card=make("section","rainPost");
+ const game=make("div","rainGame");
+ const score=make("div","rainScore","♥ 0");
+ const tip=make("div","rainTip","Pink +1  Gold +5  Black -3");
+ const button=make("button","rainStart","PLAY HEART RAIN ♥");
+ const message=make("div","rainMessage");
+ const result=make("div","rainEnd","Catch the hearts!");
+ card.append(make("div","rainTitle","♥ HEART RAIN"));
+ game.append(score,tip,button,message);
+ card.append(game,result);
+
+ let points=0,running=false,interval=null,timeout=null;
+
+ function stop(){
+  if(!running)return;
+  running=false;
+  clearInterval(interval);
+  clearTimeout(timeout);
+  game.querySelectorAll(".rainHeart").forEach(el=>el.remove());
+  message.textContent="+"+points+" ♥";
+  result.textContent="You earned "+points+" hearts!";
+  button.textContent="PLAY AGAIN ♥";
+  button.style.display="block";
+  if(activeRain===stop)activeRain=null;
+ }
+
+ function drop(){
+  if(!running)return;
+  const chance=Math.random();
+  const value=chance<.13?5:chance<.29?-3:1;
+  const type=value===5?"gold":value===-3?"bad":"";
+  const h=make("button","rainHeart "+type,"♥");
+  h.style.left=5+Math.random()*85+"%";
+  h.style.fontSize=22+Math.random()*19+"px";
+  const duration=1.3+Math.random()*1.6;
+  h.style.animationDuration=duration+"s";
+  game.append(h);
+  h.onclick=()=>{
+   if(!running)return;
+   points=Math.max(0,points+value);
+   totalInteractions++;
+   addLikes(value);
+   makeFloatingStat();
+   score.textContent="♥ "+points;
+   h.remove();
+  };
+  setTimeout(()=>h.remove(),duration*1000+100);
+ }
+
+ button.onclick=()=>{
+  if(activeRain&&activeRain!==stop)activeRain();
+  activeRain=stop;
+  running=true;
+  points=0;
+  score.textContent="♥ 0";
+  message.textContent="";
+  button.style.display="none";
+  result.textContent="Catch the hearts!";
+  drop();
+  interval=setInterval(drop,260);
+  timeout=setTimeout(stop,15000);
+ };
+ return card;
+}
+
+/* HEART SHOOTER */
+function createHeartShooter(){
+ const card=make("section","interactiveCard");
+ card.append(
+  make("div","cardLabel","NEW GAME · AIM & SHOOT"),
+  make("div","cardTitle","HEART SHOOTER ♥")
+ );
+ const area=make("div","shooterArea");
+ const hud=make("div","shooterHud");
+ const score=make("span","","♥ 0");
+ const time=make("span","","15s");
+ hud.append(score,time);
+ const start=make("button","shooterStart","START SHOOTING ♥");
+ const end=make("div","shooterEnd");
+ area.append(hud,start,end);
+ card.append(area,make("div","cardSmall","Click the moving hearts!"));
+
+ let playing=false,points=0,remaining=SHOOTER_TIME;
+ let clock=null,moveTimer=null;
+ const targets=[];
+
+ function stop(){
+  if(!playing)return;
+  playing=false;
+  clearInterval(clock);
+  clearInterval(moveTimer);
+  targets.forEach(t=>t.remove());
+  targets.length=0;
+  end.textContent="TIME'S UP! ♥ "+points;
+  end.style.display="grid";
+  start.textContent="PLAY AGAIN ♥";
+  start.style.display="block";
+  start.style.top="80%";
+  if(activeShooterStop===stop)activeShooterStop=null;
+ }
+
+ function moveTargets(){
+  if(!playing)return;
+  targets.forEach(t=>{
+   t.style.left=(6+Math.random()*75)+"%";
+   t.style.top=(14+Math.random()*65)+"%";
+  });
+ }
+
+ function hit(t){
+  if(!playing)return;
+  points++;
+  totalInteractions++;
+  addLikes(1);
+  score.textContent="♥ "+points;
+  makeFloatingStat();
+
+  const pop=make("span","","+1 ♥");
+  Object.assign(pop.style,{
+   position:"absolute",
+   left:t.style.left,top:t.style.top,
+   color:"white",fontSize:"20px",
+   fontWeight:"bold",pointerEvents:"none",zIndex:"12"
+  });
+  area.append(pop);
+  pop.animate([
+   {transform:"translateY(0)",opacity:1},
+   {transform:"translateY(-45px)",opacity:0}
+  ],{duration:650}).onfinish=()=>pop.remove();
+
+  t.style.left=(6+Math.random()*75)+"%";
+  t.style.top=(14+Math.random()*65)+"%";
+ }
+
+ start.onclick=()=>{
+  if(activeShooterStop&&activeShooterStop!==stop)activeShooterStop();
+  activeShooterStop=stop;
+  playing=true;
+  points=0;
+  remaining=SHOOTER_TIME;
+  score.textContent="♥ 0";
+  time.textContent=remaining+"s";
+  end.style.display="none";
+  start.style.display="none";
+  start.style.top="50%";
+
+  area.querySelectorAll(".shooterTarget").forEach(e=>e.remove());
+  targets.length=0;
+  for(let i=0;i<SHOOTER_TARGETS;i++){
+   const target=make("button","shooterTarget","♥");
+   target.style.transition="left .65s ease-in-out,top .65s ease-in-out";
+   target.style.left=(6+Math.random()*75)+"%";
+   target.style.top=(14+Math.random()*65)+"%";
+   target.onclick=e=>{
+    e.stopPropagation();
+    hit(target);
+   };
+   targets.push(target);
+   area.append(target);
+  }
+
+  moveTimer=setInterval(moveTargets,850);
+  clock=setInterval(()=>{
+   remaining--;
+   time.textContent=remaining+"s";
+   if(remaining<=0)stop();
+  },1000);
+ };
+ shooterStops.push(stop);
+ return card;
+}
+
+/* BREAK HEART */
+function createBreakHeart(){
+ const card=make("section","interactiveCard");
+ card.append(
+  make("div","cardLabel","NEW GAME · TAP CHALLENGE"),
+  make("div","cardTitle","BREAK THE HEART ♥")
+ );
+ const area=make("div","breakArea");
+ const heart=make("button","breakHeart","♥");
+ const counter=make("div","breakCount","TAP 12 TIMES TO BREAK!");
+ const reset=make("button","breakReset","BREAK ANOTHER ♥");
+ area.append(heart,counter,reset);
+ card.append(
+  area,
+  make("div","cardSmall","Break the giant heart to earn 10 hearts!")
+ );
+ let taps=0,broken=false;
+
+ function shower(){
+  for(let i=0;i<34;i++){
+   const bit=make("span","breakParticle","♥");
+   bit.style.left="50%";
+   bit.style.top="42%";
+   bit.style.fontSize=12+Math.random()*24+"px";
+   area.append(bit);
+   const a=Math.random()*Math.PI*2;
+   const d=70+Math.random()*160;
+   bit.animate([
+    {transform:"translate(-50%,-50%) scale(.4)",opacity:1},
+    {transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(.6)`,opacity:0}
+   ],{duration:1000+Math.random()*700}).onfinish=()=>bit.remove();
+  }
+ }
+
+ function resetGame(){
+  taps=0;
+  broken=false;
+  heart.disabled=false;
+  heart.textContent="♥";
+  heart.style.opacity="1";
+  heart.style.transform="scale(1)";
+  counter.textContent="TAP "+BREAK_HEART_TAPS+" TIMES TO BREAK!";
+  reset.style.display="none";
+ }
+
+ heart.onclick=()=>{
+  if(broken)return;
+  taps++;
+  totalInteractions++;
+  const left=BREAK_HEART_TAPS-taps;
+  counter.textContent=left>0?left+" TAPS LEFT":"HEART BROKEN!";
+  heart.style.transform=
+   `scale(${1+taps*.025}) rotate(${(Math.random()-.5)*9}deg)`;
+
+  if(taps>=BREAK_HEART_TAPS){
+   broken=true;
+   heart.disabled=true;
+   heart.textContent="💔";
+   shower();
+   addLikes(BREAK_HEART_REWARD);
+   makeFloatingStat();
+   makeFloatingStat();
+   counter.textContent="+10 HEARTS COLLECTED!";
+   reset.style.display="block";
+  }
+ };
+ reset.onclick=resetGame;
+ return card;
+}
+
+/* INFINITE FEED */
+function createTimePost(){
+ let title="JUST ONE MORE SCROLL";
+ let message="Five more minutes won't hurt... right?";
+ if(socialPhase==="adult"){
+  title="ANOTHER DAY";
+  message="You've been here longer than you think.";
+ }
+ if(socialPhase==="elderly"){
+  title="WHERE DID THE TIME GO?";
+  message="Some memories never came back.";
+ }
+ if(socialPhase==="dead"){
+  title="STILL SCROLLING?";
+  message="Your time ended. The feed didn't.";
+ }
+ const card=make(
+  "section","timePost"+(socialPhase==="dead"?" dark":"")
+ );
+ card.append(make("b","",title),make("p","",message));
+ return card;
+}
+
+function appendSpecialMessage(title,message,dark=false){
+ const card=make("section","timePost"+(dark?" dark":""));
+ card.append(make("b","",title),make("p","",message));
+ $("feed").append(card);
+}
+
+function createFeedItem(){
+ feedItemCount++;
+ const n=(feedItemCount-1)%12;
+ if(n===2)return createPoll();
+ if(n===4)return createHeartRain();
+ if(n===6)return createHeartShooter();
+ if(n===8)return createThisOrThat();
+ if(n===10)return createBreakHeart();
+ if(n===11)return createTimePost();
+ return createPost();
+}
+
+function appendFeed(){
+ const f=document.createDocumentFragment();
+ for(let i=0;i<12;i++)f.append(createFeedItem());
+ $("feed").append(f);
+}
+
+const socialNotifications=[
+ "Someone liked your photo! ♥",
+ "You have 10 new followers!",
+ "Your friend posted a new reel!",
+ "Someone mentioned you in a comment!",
+ "Your new post is getting attention!",
+ "A new message is waiting...",
+ "You missed something interesting!"
+];
+
+function showSocialToast(message){
+ if(!socialOpen)return;
+ $("socialToastText").textContent=message;
+ $("socialToast").classList.add("show");
+ clearTimeout(toastTimer);
+ toastTimer=setTimeout(()=>{
+  $("socialToast").classList.remove("show");
+ },3800);
+}
+
+function randomSocialNotification(){
+ if(!socialOpen||page!=="main"||endingStarted)return;
+ showSocialToast(
+  socialNotifications[Math.random()*socialNotifications.length|0]
+ );
+ if(socialPhase!=="dead"){
+  $("ding").currentTime=0;
+  $("ding").play().catch(()=>{});
+ }
+}
+
+$("socialToast").onclick=()=>{
+ $("socialToast").classList.remove("show");
+ totalInteractions++;
+ addLikes(1);
+ makeFloatingStat();
+
+ const surprise=make("section","interactiveCard");
+ surprise.append(
+  make("div","cardLabel","NOTIFICATION OPENED"),
+  make("div","cardTitle","You opened the notification!"),
+  make("div","cardSmall","Nothing new here. Keep scrolling...")
+ );
+
+ const feed=$("feed");
+ const before=feed.scrollTop;
+ feed.prepend(surprise);
+ feed.scrollTop=before+surprise.offsetHeight;
+ poseAnchor+=surprise.offsetHeight;
+};
+
+$("feed").addEventListener("scroll",()=>{
+ checkPoseProgress();
+ const f=$("feed");
+ if(f.scrollTop+f.clientHeight>=f.scrollHeight-600)appendFeed();
+ if(socialOpen&&Math.random()<.18)makeFloatingStat();
+});
+
+$("appA").onclick=()=>{
+ if(socialOpen)return;
+ $("home").style.display="none";
+ $("feed").scrollTop=0;
+ poseAnchor=0;
+ socialOpen=true;
+ clearInterval(toastLoop);
+ toastLoop=setInterval(randomSocialNotification,14000);
+ scheduleNextMissedCall();
+ startFloatingStats();
+};
+
+/* GRAVEYARD ENDING */
+function captureSkeletonLocation(){
+ const r=$("walker").getBoundingClientRect();
+ skeletonLocation=r.width&&r.height
+  ?{x:r.left+r.width/2,y:r.bottom,height:r.height}
+  :{x:innerWidth*.72,y:innerHeight*.72,height:innerHeight*.25};
+}
+
+function startEnding(){
+ if(endingStarted||page!=="main")return;
+ endingStarted=true;
+ endingReady=false;
+ graveClicked=false;
+
+ stopMissedCalls();
+ stopFloatingStats();
+ shooterStops.forEach(fn=>fn());
+ clearInterval(noteLoop);
+ clearInterval(toastLoop);
+ clearTimeout(toastTimer);
+
+ $("steps").pause();
+ $("ding").pause();
+ $("socialToast").classList.remove("show");
+ captureSkeletonLocation();
+ $("endingStage").classList.add("on");
+
+ requestAnimationFrame(()=>{
+  requestAnimationFrame(()=>{
+   $("endingStage").classList.add("black");
+  });
+ });
+ later(startChurchScene,BLACKOUT_DURATION+50);
+}
+
+function startChurchScene(){
+ if(!bellStarted)playChurchBell();
+ later(()=>{
+  $("deathMessage").classList.add("visible");
+ },BELL_TEXT_DELAY);
+ later(()=>{
+  $("deathMessage").classList.remove("visible");
+  later(revealCentralGrave,700);
+ },BELL_SCENE_DURATION);
+}
+
+function revealCentralGrave(){
+ const p=skeletonLocation;
+ const g=$("centerGrave");
+ g.classList.remove("ready");
+ g.style.transition="none";
+ g.style.left=p.x+"px";
+ g.style.top=p.y+"px";
+ g.style.width=Math.max(75,Math.min(145,p.height*.5))+"px";
+ g.style.opacity=".08";
+ void g.offsetWidth;
+
+ g.style.transition=
+  `left ${GRAVE_MOVE_DURATION}ms cubic-bezier(.18,.7,.26,1),`+
+  `top ${GRAVE_MOVE_DURATION}ms cubic-bezier(.18,.7,.26,1),`+
+  `width ${GRAVE_MOVE_DURATION}ms cubic-bezier(.18,.7,.26,1),`+
+  `opacity ${GRAVE_MOVE_DURATION}ms linear,filter .6s ease`;
+
+ requestAnimationFrame(()=>{
+  requestAnimationFrame(()=>{
+   g.style.left=innerWidth/2+"px";
+   g.style.top=innerHeight*.61+"px";
+   g.style.width=Math.min(innerWidth*.37,innerHeight*.43,360)+"px";
+   g.style.opacity="1";
+  });
+ });
+
+ later(()=>{
+  const crow=$("crowSound");
+  crow.currentTime=0;
+  crow.volume=.8;
+  crow.play().catch(()=>{});
+  buildHiddenGraveyard();
+  activateFlashlight();
+  g.classList.add("ready");
+  endingReady=true;
+ },GRAVE_MOVE_DURATION+250);
+}
+
+function buildHiddenGraveyard(){
+ const field=$("hiddenGraves");
+ field.replaceChildren();
+ const cw=innerWidth/HIDDEN_GRAVE_COLUMNS;
+ const ch=innerHeight/HIDDEN_GRAVE_ROWS;
+
+ for(let r=0;r<HIDDEN_GRAVE_ROWS;r++){
+  for(let c=0;c<HIDDEN_GRAVE_COLUMNS;c++){
+   const x=(c+.5)*cw;
+   const y=(r+.88)*ch;
+   if(Math.hypot(x-innerWidth/2,y-innerHeight*.61)<innerHeight*.25){
+    continue;
+   }
+   const img=document.createElement("img");
+   img.src="graveyard.png";
+   img.className="hiddenGrave";
+   img.style.left=x+"px";
+   img.style.top=y+"px";
+   img.style.height=Math.min(ch*.95,cw*1.5)+"px";
+   field.append(img);
+  }
+ }
+}
+
+function updateFlashlight(x,y){
+ const px=x/innerWidth*100+"%";
+ const py=y/innerHeight*100+"%";
+ for(const id of ["hiddenGraves","flashlight"]){
+  $(id).style.setProperty("--mx",px);
+  $(id).style.setProperty("--my",py);
+ }
+ $("lightCursor").style.left=x+"px";
+ $("lightCursor").style.top=y+"px";
+}
+
+function activateFlashlight(){
+ $("hiddenGraves").classList.add("active");
+ $("flashlight").classList.add("active");
+ $("lightCursor").classList.add("active");
+ updateFlashlight(innerWidth/2,innerHeight/2);
+}
+
+$("endingStage").addEventListener("pointermove",e=>{
+ if(endingReady&&!graveClicked){
+  updateFlashlight(e.clientX,e.clientY);
+ }
+});
+
+$("centerGrave").onclick=e=>{
+ if(!endingReady||graveClicked)return;
+ e.stopPropagation();
+ graveClicked=true;
+ $("centerGrave").classList.remove("ready");
+ $("lightCursor").classList.remove("active");
+
+ const r=$("centerGrave").getBoundingClientRect();
+ const x=r.left+r.width/2;
+ const y=r.top+r.height*.47;
+ createHugeHeartBurst(x,y,totalLikes);
+ later(startFinalFade,FINAL_FADE_DELAY);
+};
+
+function createHugeHeartBurst(x,y,likes){
+ const count=Math.min(
+  MAX_BURST_HEARTS,
+  Math.max(MIN_BURST_HEARTS,likes*12)
+ );
+
+ for(let i=0;i<count;i++){
+  later(()=>{
+   const h=document.createElement("span");
+   h.className="burstHeart";
+   h.textContent="♥";
+   h.style.left=x+(Math.random()-.5)*110+"px";
+   h.style.top=y+(Math.random()-.5)*90+"px";
+   h.style.fontSize=12+Math.random()*39+"px";
+   h.style.color=[
+    "#ff174f","#ff315e","#ff7490","#c80035","#ff93a8"
+   ][Math.random()*5|0];
+   $("heartBurstLayer").append(h);
+
+   const a=Math.random()*Math.PI*2;
+   const d=170+Math.random()*Math.max(innerWidth,innerHeight)*.95;
+   const dx=Math.cos(a)*d;
+   const dy=Math.sin(a)*d;
+
+   h.animate([
+    {transform:"translate(-50%,-50%) scale(.1)",opacity:0},
+    {transform:"translate(-50%,-50%) scale(1.45)",opacity:1,offset:.13},
+    {
+     transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) rotate(${(Math.random()-.5)*1000}deg) scale(.5)`,
+     opacity:0
+    }
+   ],{
+    duration:2300+Math.random()*1600,
+    easing:"ease-out",
+    fill:"forwards"
+   }).onfinish=()=>h.remove();
+  },Math.random()*1300);
+ }
+}
+
+/* LAST NOTIFICATION */
+function startFinalFade(){
+ const bell=$("churchSound");
+ const crow=$("crowSound");
+ bell.pause();
+ bell.currentTime=0;
+ crow.pause();
+ crow.currentTime=0;
+ bellStarted=false;
+ $("finalBlack").classList.add("on");
+
+ later(()=>{
+  later(()=>{
+   bell.pause();
+   crow.pause();
+   $("lastNotification").classList.add("visible");
+   const sound=$("ding");
+   sound.pause();
+   sound.currentTime=0;
+   sound.volume=1;
+   sound.play().catch(()=>{});
+  },FINAL_NOTIFICATION_DELAY);
+
+  later(()=>{
+   $("goneText").textContent=
+    playerName.toUpperCase()+", YOU'RE GONE.";
+   $("goneText").classList.add("visible");
+  },FIRST_SENTENCE_DELAY);
+
+  later(()=>{
+   $("profileText").classList.add("visible");
+  },SECOND_SENTENCE_DELAY);
+
+  later(showChoiceScreen,CHOICE_DELAY);
+ },FINAL_FADE_DURATION);
+}
+
+/* TWO CHOICES */
+function showChoiceScreen(){
+ $("choiceScreen").classList.add("on");
+ requestAnimationFrame(()=>{
+  requestAnimationFrame(()=>{
+   $("choiceScreen").classList.add("visible");
+  });
+ });
+}
+
+$("oneMore").onclick=()=>{
+ $("choiceScreen").classList.remove("visible");
+ setTimeout(()=>{
+  $("choiceScreen").classList.remove("on");
+  $("endingStage").classList.remove("on");
+  show("main");
+  initRoom();
+ },750);
+};
+
+/* SECRET ENDING */
+function setWindowArea(){
+ const area=WINDOW_AREA;
+ const hotspot=$("windowHotspot");
+ const hint=$("windowHint");
+
+ hotspot.style.left=area.left+"%";
+ hotspot.style.top=area.top+"%";
+ hotspot.style.width=area.width+"%";
+ hotspot.style.height=area.height+"%";
+
+ hint.style.left=(area.left+area.width/2)+"%";
+ hint.style.top=(area.top+area.height*.60)+"%";
+ hint.style.transform="translate(-50%,-50%)";
+
+ const character=$("windowCharacter");
+ character.style.left=WINDOW_CHARACTER.left+"%";
+ character.style.bottom=WINDOW_CHARACTER.bottom+"%";
+ character.style.height=WINDOW_CHARACTER.height+"%";
+}
+
+$("putDown").onclick=()=>{
+ secretTimers.forEach(clearTimeout);
+ secretTimers=[];
+ windowOpened=false;
+ setWindowArea();
+
+ $("natureSound").pause();
+ $("natureSound").currentTime=0;
+ $("natureSound").volume=.75;
+
+ $("windowCharacter").src=
+  selected==="boy"?"be.png":"ge.png";
+
+ const room=$("secretRoom");
+ room.classList.remove("color","fadeWhite");
+ room.classList.add("on");
+
+ requestAnimationFrame(()=>{
+  requestAnimationFrame(()=>{
+   room.classList.add("visible");
+  });
+ });
+};
+
+/* B1 -> B2 -> WHITE, WITHOUT ZOOM */
+$("windowHotspot").onclick=()=>{
+ if(windowOpened)return;
+ windowOpened=true;
+
+ const room=$("secretRoom");
+ room.classList.add("color");
+
+ const nature=$("natureSound");
+ nature.currentTime=0;
+ nature.volume=.75;
+ nature.play().catch(()=>{});
+
+ secretLater(()=>{
+  room.classList.add("fadeWhite");
+ },WHITE_FADE_DELAY);
+
+ secretLater(showWhiteEnding,WHITE_SCREEN_DELAY);
+};
+
+/* WHITE ENDING TEXT */
+function showWhiteEnding(){
+ const screen=$("whiteEnding");
+ screen.classList.add("on");
+
+ requestAnimationFrame(()=>{
+  requestAnimationFrame(()=>{
+   screen.classList.add("visible");
+  });
+ });
+
+ secretLater(()=>showWhiteLine("choice"),900);
+ secretLater(()=>{
+  $("whiteLine").classList.remove("visible");
+ },5200);
+ secretLater(()=>showWhiteLine("question"),6900);
+ fadeNatureSound(5200);
+}
+
+function showWhiteLine(type){
+ const line=$("whiteLine");
+ line.classList.remove("visible");
+ line.replaceChildren();
+
+ if(type==="choice"){
+  line.append(
+   document.createTextNode("EVERYTHING DEPENDS ON "),
+   make("strong","",playerName.toUpperCase()+"'S"),
+   document.createTextNode(" CHOICE.")
+  );
+ }else{
+  line.textContent="WHAT WILL YOU CHOOSE?";
+ }
+
+ requestAnimationFrame(()=>{
+  requestAnimationFrame(()=>{
+   line.classList.add("visible");
+  });
+ });
+}
+
+function fadeNatureSound(duration){
+ const sound=$("natureSound");
+ if(sound.paused)return;
+ const startVolume=sound.volume;
+ const steps=30;
+
+ for(let i=1;i<=steps;i++){
+  secretLater(()=>{
+   sound.volume=Math.max(0,startVolume*(1-i/steps));
+   if(i===steps){
+    sound.pause();
+    sound.currentTime=0;
+    sound.volume=.75;
+   }
+  },duration*i/steps);
+ }
+}
+</script>
+</body>
+</html>
